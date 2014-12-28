@@ -21,6 +21,7 @@ type hol_type = KernelTypes.hol_type;
 val ERR = mk_HOL_ERR "Type";
 val WARN = HOL_WARNING "Type";
 
+fun to_kt ty = ty ;
 
 (*---------------------------------------------------------------------------
               Create the signature for HOL types

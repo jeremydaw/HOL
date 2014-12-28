@@ -7,6 +7,7 @@ sig
   type 'a set   = 'a HOLset.set
 
   val kernelid : string
+  val to_kt    : thm -> KernelTypes.thm
 
   (* Simple operations on the type of theorems *)
 

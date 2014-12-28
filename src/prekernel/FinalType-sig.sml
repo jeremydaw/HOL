@@ -3,6 +3,7 @@ sig
 
  eqtype hol_type
 
+ val to_kt         : hol_type -> KernelTypes.hol_type 
  val mk_vartype    : string -> hol_type
  val gen_tyvar     : unit -> hol_type
  val dest_vartype  : hol_type -> string
