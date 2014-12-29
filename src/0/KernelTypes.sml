@@ -13,11 +13,13 @@ type id = KernelSig.kernelid
  * HOL types are somewhat akin to terms in first order logic.                *
  *---------------------------------------------------------------------------*)
 
+datatype ('name, 'ty) tbs = Set of 'ty | Unset of 'name ;
+
 type tyconst = id * int
 
 datatype hol_type = Tyv of string
-                  | Tyapp of tyconst * hol_type list;
-
+                  | Tyapp of tyconst * hol_type list
+                  | Tyref of (string, hol_type) tbs ref ;
 
 (*---------------------------------------------------------------------------*
  * HOL terms are represented internally using deBruijn indices and explicit  *
@@ -41,6 +43,7 @@ datatype term = Fv of string * hol_type
               | Const of tmconst
               | Comb  of term * term
               | Abs   of term * term
+              | Tmref of (string * hol_type, term) tbs ref
               | Clos  of term Subst.subs * term;
 
 (*---------------------------------------------------------------------------

@@ -35,7 +35,6 @@ val thm_err = mk_HOL_ERR "Thm"
 fun ERR f m = raise thm_err f m
 fun Assert b s1 s2 = if b then () else ERR s1 s2
 
-
 (*---------------------------------------------------------------------------*
  * Miscellaneous syntax routines.                                            *
  *---------------------------------------------------------------------------*)
