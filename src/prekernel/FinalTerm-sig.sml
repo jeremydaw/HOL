@@ -63,7 +63,11 @@ sig
   val beta_conv     : term -> term
   val eta_conv      : term -> term
   val subst         : (term,term) subst -> term -> term
+  val kt_subst      : (KernelTypes.term,KernelTypes.term) subst ->
+			KernelTypes.term -> KernelTypes.term
   val inst          : (hol_type,hol_type) subst -> term -> term
+  val kt_inst       : (KernelTypes.hol_type,KernelTypes.hol_type) subst ->
+			KernelTypes.term -> KernelTypes.term
 
   val raw_match     : hol_type list -> term set
                       -> term -> term

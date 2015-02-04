@@ -582,6 +582,8 @@ fun subst [] = I
     end
 end
 
+val kt_subst = subst ;
+
 (*---------------------------------------------------------------------------*
  *     Instantiate type variables in a term                                  *
  *---------------------------------------------------------------------------*)
@@ -603,6 +605,8 @@ fun inst [] tm = tm
     in
       inst1 tm
     end;
+
+val kt_inst = inst ;
 
 fun dest_comb (Comb r) = r
   | dest_comb (t as Clos _) = dest_comb (push_clos t)
