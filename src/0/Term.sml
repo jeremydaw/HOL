@@ -24,6 +24,7 @@ val --> = Type.-->;   infixr 3 -->;
 infix |-> ##;
 
 fun to_kt tm = tm ;
+fun unsafe_from_kt tm = tm ;
 
 (*---------------------------------------------------------------------------
                Create the signature for HOL terms
@@ -364,6 +365,16 @@ fun gen_variant P caller =
 val variant      = gen_variant inST "variant"
 val prim_variant = gen_variant (K false) "prim_variant";
 
+(* variants : term list -> term list -> (term, term) subst
+  avoids = list of names to be avoided
+  cands = candidate names, will be used if possible
+  result is a subsitution of candidate names for alternatives, where necessary
+  (all arguments and results are in the form of free variables) *)
+fun variants avoids [] = []
+  | variants avoids (cand :: cands) =
+    let val new = variant (avoids @ cands) cand ;
+      val rest = variants (new :: avoids) cands ;
+    in if cand = new then rest else (cand |-> new) :: rest end ;
 
 (*---------------------------------------------------------------------------*
  *             Making constants.                                             *

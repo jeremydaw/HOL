@@ -22,6 +22,7 @@ val ERR = mk_HOL_ERR "Type";
 val WARN = HOL_WARNING "Type";
 
 fun to_kt ty = ty ;
+fun unsafe_from_kt ty = ty ;
 
 (*---------------------------------------------------------------------------
               Create the signature for HOL types
@@ -272,6 +273,17 @@ fun inST str = decls str <> [] ;
 
 val variant_ty      = gen_variant_ty inST "variant_ty"
 val prim_variant_ty = gen_variant_ty (K false) "prim_variant_ty";
+
+(* variants_ty : hol_type list -> hol_type list -> (hol_type, hol_type) subst
+  avoids = list of names to be avoided
+  cands = candidate names, will be used if possible
+  result is a subsitution of candidate names for alternatives, where necessary
+  (all arguments and results are in the form of type variables) *)
+fun variants_ty avoids [] = []
+  | variants_ty avoids (cand :: cands) =
+    let val new = variant_ty (avoids @ cands) cand ;
+      val rest = variants_ty (new :: avoids) cands ;
+    in if cand = new then rest else (cand |-> new) :: rest end ;
 
 (*---------------------------------------------------------------------------
          This matching algorithm keeps track of identity bindings

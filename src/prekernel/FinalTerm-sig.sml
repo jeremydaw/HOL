@@ -7,6 +7,7 @@ sig
   type 'a set       = 'a HOLset.set
 
   val to_kt         : term -> KernelTypes.term 
+  val unsafe_from_kt: KernelTypes.term -> term 
   val type_of       : term -> hol_type
   val free_vars     : term -> term list
   val free_vars_lr  : term -> term list
@@ -23,6 +24,7 @@ sig
   val genvar        : hol_type -> term
   val genvars       : hol_type -> int -> term list
   val variant       : term list -> term -> term
+  val variants      : term list -> term list -> (term, term) subst
   val prim_variant  : term list -> term -> term
   val gen_variant   : (string -> bool) -> string -> term list -> term -> term
 

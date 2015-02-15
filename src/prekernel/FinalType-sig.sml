@@ -4,6 +4,7 @@ sig
  eqtype hol_type
 
  val to_kt         : hol_type -> KernelTypes.hol_type 
+ val unsafe_from_kt: KernelTypes.hol_type -> hol_type 
  val mk_vartype    : string -> hol_type
  val gen_tyvar     : unit -> hol_type
  val dest_vartype  : hol_type -> string
@@ -11,6 +12,8 @@ sig
  val is_gen_tyvar  : hol_type -> bool
 
  val variant_ty    : hol_type list -> hol_type -> hol_type
+ val variants_ty   :
+   hol_type list -> hol_type list -> (hol_type, hol_type) subst
  val prim_variant_ty : hol_type list -> hol_type -> hol_type
  val gen_variant_ty  : (string -> bool) -> string ->
                      hol_type list -> hol_type -> hol_type
