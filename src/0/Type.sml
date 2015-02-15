@@ -274,16 +274,19 @@ fun inST str = decls str <> [] ;
 val variant_ty      = gen_variant_ty inST "variant_ty"
 val prim_variant_ty = gen_variant_ty (K false) "prim_variant_ty";
 
-(* variants_ty : hol_type list -> hol_type list -> (hol_type, hol_type) subst
+(* variants_ty : hol_type list -> hol_type list -> 
+  hol_type list * (hol_type, hol_type) subst
   avoids = list of names to be avoided
   cands = candidate names, will be used if possible
   result is a subsitution of candidate names for alternatives, where necessary
   (all arguments and results are in the form of type variables) *)
-fun variants_ty avoids [] = []
+
+fun variants_ty avoids [] = ([], [])
   | variants_ty avoids (cand :: cands) =
     let val new = variant_ty (avoids @ cands) cand ;
-      val rest = variants_ty (new :: avoids) cands ;
-    in if cand = new then rest else (cand |-> new) :: rest end ;
+      val (unchanged, subs) = variants_ty (new :: avoids) cands ;
+    in if cand = new then (new :: unchanged, subs)
+      else (unchanged, (cand |-> new) :: subs) end ;
 
 (*---------------------------------------------------------------------------
          This matching algorithm keeps track of identity bindings

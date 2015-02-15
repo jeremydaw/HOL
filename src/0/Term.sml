@@ -92,6 +92,8 @@ fun push_clos (Clos(E, Comb(f,x))) = Comb(mk_clos(E,f), mk_clos(E,x))
   | push_clos _ = raise ERR "push_clos" "not a subst"
 ;
 
+val push_clos_kt = push_clos ;
+
 (*---------------------------------------------------------------------------*
  * Computing the type of a term.                                             *
  *---------------------------------------------------------------------------*)
@@ -112,6 +114,7 @@ local fun lookup 0 (ty::_)  = ty
 in
 fun type_of tm = ty_of tm []
 end;
+val type_of_kt = type_of ;
 
 
 (*---------------------------------------------------------------------------
@@ -365,16 +368,19 @@ fun gen_variant P caller =
 val variant      = gen_variant inST "variant"
 val prim_variant = gen_variant (K false) "prim_variant";
 
-(* variants : term list -> term list -> (term, term) subst
+(* variants : term list -> term list -> term list * (term, term) subst
   avoids = list of names to be avoided
   cands = candidate names, will be used if possible
   result is a subsitution of candidate names for alternatives, where necessary
-  (all arguments and results are in the form of free variables) *)
-fun variants avoids [] = []
+  (all arguments and results are in the form of free variables)
+  and also the unchanged variables *)
+
+fun variants avoids [] = ([], [])
   | variants avoids (cand :: cands) =
     let val new = variant (avoids @ cands) cand ;
-      val rest = variants (new :: avoids) cands ;
-    in if cand = new then rest else (cand |-> new) :: rest end ;
+      val (unchanged, subs) = variants (new :: avoids) cands ;
+    in if cand = new then (new :: unchanged, subs)
+      else (unchanged, (cand |-> new) :: subs) end ;
 
 (*---------------------------------------------------------------------------*
  *             Making constants.                                             *
