@@ -12,8 +12,8 @@ sig
  val is_gen_tyvar  : hol_type -> bool
 
  val variant_ty    : hol_type list -> hol_type -> hol_type
- val variants_ty   :
-   hol_type list -> hol_type list -> (hol_type, hol_type) subst
+ val variants_ty   : 
+   hol_type list -> hol_type list -> {redex: hol_type, residue: hol_type} list
  val prim_variant_ty : hol_type list -> hol_type -> hol_type
  val gen_variant_ty  : (string -> bool) -> string ->
                      hol_type list -> hol_type -> hol_type

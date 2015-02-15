@@ -75,6 +75,8 @@ sig
    val last : 'a list -> 'a
    val lex_cmp : ('b cmp * 'c cmp) -> (('a -> 'b) * ('a -> 'c)) -> 'a cmp
    val list_compare : 'a cmp -> 'a list cmp
+   val list_mk_gen_right : ('a * 'b -> 'a) -> 'a * 'b list -> 'a
+   val list_mk_gen_left : ('a * 'b -> 'b) -> 'a list * 'b -> 'b
    val list_of_pair : 'a * 'a -> 'a list
    val list_of_quadruple : 'a * 'a * 'a * 'a -> 'a list
    val list_of_singleton : 'a -> 'a list
@@ -131,6 +133,12 @@ sig
    val str_all : (char -> bool) -> string -> bool
    val strcat : string -> string -> string
    val string_to_int : string -> int
+   (* now in HolKernel
+   val strip_gen_left : ('a -> 'b * 'a) -> 'a -> 'b list * 'a
+   val strip_gen_right : ('a -> 'a * 'b) -> 'a -> 'a * 'b list
+   *)
+   val strip_gen_left_n : ('a -> 'b * 'a) -> int -> 'a -> 'b list * 'a
+   val strip_gen_right_n : ('a -> 'a * 'b) -> int -> 'a -> 'a * 'b list
    val subst_assoc : ('a -> bool) -> ('a, 'b)subst -> 'b option
    val subtract : ''a list -> ''a list -> ''a list
    val swap : 'a * 'b -> 'b * 'a

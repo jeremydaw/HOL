@@ -379,6 +379,76 @@ fun mapshape [] _ _ =  []
      end
   | mapshape _ _ _ = raise ERR "mapshape" "irregular lists"
 
+(** generalise strip_... and list_mk_... functions **)
+
+(* strip_gen_left : ('a -> 'b * 'a) -> 'a -> 'b list * 'a
+  repeatedly strip off something on the left, until exception *)
+(* this now in src/postkernel/HolKernel.sml 
+fun strip_gen_left f th =
+  let fun strip_gen_left' (vs, th) =
+      let val (v, th1) = f th in strip_gen_left' (v :: vs, th1) end
+      handle _ => (vs, th)
+    val (rvs, thr) = strip_gen_left' ([], th) ;
+  in (rev rvs, thr) end ;
+  *)
+
+(* strip_gen_left_n : ('a -> 'b * 'a) -> int -> 'a -> 'b list * 'a
+  strip off something on the left n times *)
+fun strip_gen_left_n f n th =
+  let
+    fun strip_gen_left_n' 0 (vs, th) = (rev vs, th)
+      | strip_gen_left_n' n (vs, th) =
+        let val (v, th1) = f th in strip_gen_left_n' (n-1) (v :: vs, th1) end
+  in strip_gen_left_n' n ([], th) end ;
+
+(* strip_gen_right : ('a -> 'a * 'b) -> 'a -> 'a * 'b list
+  repeatedly strip off something on the right, until exception *)
+(* this now in src/postkernel/HolKernel.sml 
+fun strip_gen_right f th =
+  let fun strip_gen_right' (th', vs) =
+      let val (th1, v) = f th' in strip_gen_right' (th1, v :: vs) end
+      handle _ => (th', vs)
+  in strip_gen_right' (th, []) end ;
+  *)
+
+(* strip_gen_right_n : ('a -> 'a * 'b) -> int -> 'a -> 'a * 'b list
+  strip off something on the right n times *)
+fun strip_gen_right_n f n th =
+  let
+    fun strip_gen_right_n' 0 (th', vs) = (th', vs)
+      | strip_gen_right_n' n (th', vs) =
+        let val (th1, v) = f th' in strip_gen_right_n' (n-1) (th1, v :: vs) end
+  in strip_gen_right_n' n (th, []) end ;
+
+(* examples
+fun divmod n 0 = raise Fail ""
+  | divmod n i = (i div n, i mod n) ;
+strip_gen_right (divmod 10) 4398347935790 ;
+strip_gen_right_n (divmod 10) 5 4398347935790 ;
+
+fun ht (x :: xs) = (x, xs) ;
+strip_gen_left ht [4, 3, 9, 8, 3, 4, 7, 9, 3, 5, 7, 9, 0] ;
+strip_gen_left_n ht 5 [4, 3, 9, 8, 3, 4, 7, 9, 3, 5, 7, 9, 0] ;
+*)
+
+(* list_mk_gen_right : ('a * 'b -> 'a) -> 'a * 'b list -> 'a
+  repeatedly add something on the right *)
+fun list_mk_gen_right f (acc, []) = acc
+  | list_mk_gen_right f (acc, x :: xs) = list_mk_gen_right f (f (acc, x), xs) ;
+
+(* list_mk_gen_left : ('a * 'b -> 'b) -> 'a list * 'b -> 'b
+  repeatedly add something on the left *)
+fun list_mk_gen_left f (xs, acc) =
+  let fun list_mk_gen_left' ([], acc) = acc
+      | list_mk_gen_left' (x :: xs, acc) = list_mk_gen_left' (xs, f (x, acc))
+  in list_mk_gen_left' (rev xs, acc) end ;
+
+(* examples
+fun tu n (i, j) = i * n + j ;
+list_mk_gen_right (tu 10) (45, [4, 3, 9, 8, 3, 4, 7, 9, 3, 5, 7, 9, 0]) ;
+list_mk_gen_left (op ::) ([4, 3, 9, 8, 3, 4, 7, 9, 3, 5, 7, 9, 0], []) ;
+*)
+
 type 'a cmp = 'a * 'a -> order
 
 fun flip_order LESS = GREATER

@@ -24,7 +24,7 @@ sig
   val genvar        : hol_type -> term
   val genvars       : hol_type -> int -> term list
   val variant       : term list -> term -> term
-  val variants      : term list -> term list -> (term, term) subst
+  val variants : term list -> term list -> {redex: term, residue: term} list
   val prim_variant  : term list -> term -> term
   val gen_variant   : (string -> bool) -> string -> term list -> term -> term
 
