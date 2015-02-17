@@ -333,12 +333,20 @@ fun match_type pat ob = match_type_in_context pat ob []
  ---------------------------------------------------------------------------*)
 
 fun compare (Tyv s1, Tyv s2) = String.compare (s1,s2)
-  | compare (Tyv _, _) = LESS
+  | compare (Tyv _, Tyapp _) = LESS
   | compare (Tyapp _, Tyv _) = GREATER
   | compare (Tyapp((c1,_),A1), Tyapp((c2,_),A2)) =
-      case KernelSig.id_compare (c1, c2)
+      (case KernelSig.id_compare (c1, c2)
        of EQUAL => Lib.list_compare compare (A1,A2)
-        |   x   => x;
+        |   x   => x)
+  | compare (Tyref (ref (Set ty1)), Tyref (ref (Set ty2))) =
+    compare (ty1, ty2) 
+  | compare (Tyref (ref (Unset s1)), Tyref (ref (Unset s2))) =
+    String.compare (s1, s2) 
+  | compare (_, Tyref (ref (Unset s1))) = GREATER
+  | compare (Tyref (ref (Unset s1)), _) = LESS
+  | compare (_, Tyref (ref (Set ty1))) = GREATER
+  | compare (Tyref (ref (Set ty1)), _) = LESS ;
 
 (*---------------------------------------------------------------------------
      Automatically generated type variables. The unusual names make
