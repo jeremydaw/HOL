@@ -242,6 +242,7 @@ fun type_subst theta = delta_apply (ty_sub theta)
 
 fun polymorphic (Tyv _) = true
   | polymorphic (Tyapp(_,Args)) = exists polymorphic Args
+  | polymorphic (Tyref _) = true 
 
 (*---------------------------------------------------------------------------*
  * Given a type variable and a list of type variables,                       *
