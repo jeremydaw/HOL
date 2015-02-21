@@ -13,7 +13,7 @@ type id = KernelSig.kernelid
  * HOL types are somewhat akin to terms in first order logic.                *
  *---------------------------------------------------------------------------*)
 
-datatype ('name, 'ty) tbs = Set of 'ty | Unset of 'name ;
+datatype ('name, 'ty) tbs = Set of 'ty | Unset of 'name | Noref of 'ty ;
 
 type tyconst = id * int
 

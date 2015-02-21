@@ -13,7 +13,7 @@ sig
 
 type id = KernelSig.kernelid
 
-datatype ('name, 'ty) tbs = Set of 'ty | Unset of 'name ;
+datatype ('name, 'ty) tbs = Set of 'ty | Unset of 'name | Noref of 'ty ;
 
 type tyconst = id * int
 
