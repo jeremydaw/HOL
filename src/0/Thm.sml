@@ -1235,3 +1235,6 @@ end
 end; (* local *)
 
 end (* Thm *)
+
+structure KT_Thm = Thm ;
+

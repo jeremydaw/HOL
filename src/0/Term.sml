@@ -92,8 +92,6 @@ fun push_clos (Clos(E, Comb(f,x))) = Comb(mk_clos(E,f), mk_clos(E,x))
   | push_clos _ = raise ERR "push_clos" "not a subst"
 ;
 
-val push_clos_kt = push_clos ;
-
 (*---------------------------------------------------------------------------*
  * Computing the type of a term.                                             *
  *---------------------------------------------------------------------------*)
@@ -114,8 +112,6 @@ local fun lookup 0 (ty::_)  = ty
 in
 fun type_of tm = ty_of tm []
 end;
-val type_of_kt = type_of ;
-
 
 (*---------------------------------------------------------------------------
                 Discriminators
@@ -588,8 +584,6 @@ fun subst [] = I
     end
 end
 
-val kt_subst = subst ;
-
 (*---------------------------------------------------------------------------*
  *     Instantiate type variables in a term                                  *
  *---------------------------------------------------------------------------*)
@@ -611,8 +605,6 @@ fun inst [] tm = tm
     in
       inst1 tm
     end;
-
-val kt_inst = inst ;
 
 fun dest_comb (Comb r) = r
   | dest_comb (t as Clos _) = dest_comb (push_clos t)
@@ -1101,4 +1093,25 @@ in
   recurse [t]
 end
 
+(* follow_refs : bool -> term -> term
+  arg1 says whether to change ref-free terms to Noref tm *)
+fun follow_refs nr (Comb (t1, t2)) =
+    Comb (follow_refs nr t1, follow_refs nr t2)
+  | follow_refs nr (Tmref (ref (Noref tm))) = tm
+  | follow_refs nr (Tmref (r as ref (Set tm))) =
+    let val ftm = follow_refs nr tm in r := Noref ftm ; ftm end
+  | follow_refs nr (Tmref (ref (Unset (s, t)))) = 
+    Fv (s, Type.follow_refs nr t)
+  | follow_refs nr (c as Const (id, GRND ty)) = c
+  | follow_refs nr (Const (id, POLY ty)) =
+    let val nty = Type.follow_refs nr ty ;
+      val poly = KT_Type.polymorphic nty ;
+      val hty = (if poly then POLY else GRND) nty ;
+    in Const (id, hty) end
+  | follow_refs nr (Fv (s, ty)) = Fv (s, Type.follow_refs nr ty)
+  | follow_refs _ tm = tm ; (* todo - Abs *)
+
 end (* Term *)
+
+structure KT_Term = Term ;
+

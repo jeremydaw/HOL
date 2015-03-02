@@ -58,4 +58,9 @@ datatype thm = THM of Tag.tag * term HOLset.set * term
   datatype witness
        = TERM of term
        | THEOREM of thm
+
+(*
+val follow_refs : bool -> term -> term 
+val follow_refs_ty : bool -> hol_type -> hol_type 
+*)
 end

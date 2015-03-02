@@ -377,4 +377,17 @@ fun size acc tylist =
 
 fun type_size ty = size 0 [[ty]]
 
+(* follow_refs : bool -> hol_type -> hol_type
+  arg1 says whether to change ref-free types to Noref ty *)
+fun follow_refs nr (Tyapp (tyc, ts)) =
+    Tyapp (tyc, map (follow_refs nr) ts)
+  | follow_refs nr (Tyref (ref (Noref ty))) = ty
+  | follow_refs nr (Tyref (r as ref (Set ty))) =
+    let val fty = follow_refs nr ty
+    in if nr then r := Noref fty else () ; fty end
+  | follow_refs nr (Tyref (ref (Unset st))) = Tyv st
+  | follow_refs _ ty = ty ;
+
 end (* Type *)
+
+structure KT_Type = Type ;

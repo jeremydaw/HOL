@@ -6,10 +6,6 @@ sig
   type ('a,'b)subst = ('a,'b)Lib.subst
   type 'a set       = 'a HOLset.set
 
-  val to_kt         : term -> KernelTypes.term 
-  val unsafe_from_kt: KernelTypes.term -> term 
-  val type_of_kt    : KernelTypes.term -> KernelTypes.hol_type
-  val push_clos_kt  : KernelTypes.term -> KernelTypes.term
   val type_of       : term -> hol_type
   val free_vars     : term -> term list
   val free_vars_lr  : term -> term list
@@ -66,11 +62,7 @@ sig
   val beta_conv     : term -> term
   val eta_conv      : term -> term
   val subst         : (term,term) subst -> term -> term
-  val kt_subst      : (KernelTypes.term,KernelTypes.term) subst ->
-			KernelTypes.term -> KernelTypes.term
   val inst          : (hol_type,hol_type) subst -> term -> term
-  val kt_inst       : (KernelTypes.hol_type,KernelTypes.hol_type) subst ->
-			KernelTypes.term -> KernelTypes.term
 
   val raw_match     : hol_type list -> term set
                       -> term -> term
@@ -106,5 +98,6 @@ sig
   val read_raw : term vector -> string -> term
   val write_raw : (term -> int) -> term -> string
 
+  val follow_refs        : bool -> term -> term
 
 end
