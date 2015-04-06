@@ -1094,21 +1094,25 @@ in
 end
 
 (* follow_refs : bool -> term -> term
-  arg1 says whether to change ref-free terms to Noref tm *)
+  arg1 says whether to change ref-free terms to Noref tm 
+    and whether to change Unset terms back to Fv
+    (if not doing this then can't use Noref) *)
 fun follow_refs nr (Comb (t1, t2)) =
     Comb (follow_refs nr t1, follow_refs nr t2)
   | follow_refs nr (Tmref (ref (Noref tm))) = tm
   | follow_refs nr (Tmref (r as ref (Set tm))) =
-    let val ftm = follow_refs nr tm in r := Noref ftm ; ftm end
-  | follow_refs nr (Tmref (ref (Unset (s, t)))) = 
-    Fv (s, Type.follow_refs nr t)
+    let val ftm = follow_refs nr tm
+    in if nr then r := Noref ftm else () ; ftm end
+  | follow_refs false (tm as Tmref (ref (Unset (s, t)))) = tm
+  | follow_refs true (Tmref (ref (Unset (s, t)))) = 
+    Fv (s, KT_Type.follow_refs true t) 
   | follow_refs nr (c as Const (id, GRND ty)) = c
   | follow_refs nr (Const (id, POLY ty)) =
-    let val nty = Type.follow_refs nr ty ;
+    let val nty = KT_Type.follow_refs nr ty ;
       val poly = KT_Type.polymorphic nty ;
       val hty = (if poly then POLY else GRND) nty ;
     in Const (id, hty) end
-  | follow_refs nr (Fv (s, ty)) = Fv (s, Type.follow_refs nr ty)
+  | follow_refs nr (Fv (s, ty)) = Fv (s, KT_Type.follow_refs nr ty)
   | follow_refs _ tm = tm ; (* todo - Abs *)
 
 end (* Term *)
