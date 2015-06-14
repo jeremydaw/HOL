@@ -1103,7 +1103,8 @@ fun follow_refs nr (Comb (t1, t2)) =
   | follow_refs nr (Tmref (r as ref (Set tm))) =
     let val ftm = follow_refs nr tm
     in if nr then r := Noref ftm else () ; ftm end
-  | follow_refs false (tm as Tmref (ref (Unset (s, t)))) = tm
+  | follow_refs false (tm as Tmref (r as ref (Unset (s, t)))) =
+    (r := Unset (s, KT_Type.follow_refs false t) ; tm)
   | follow_refs true (Tmref (ref (Unset (s, t)))) = 
     Fv (s, KT_Type.follow_refs true t) 
   | follow_refs nr (c as Const (id, GRND ty)) = c
