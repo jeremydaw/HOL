@@ -2335,14 +2335,45 @@ fun ac_fns (associative, commutative) =
                          end
             else raise ERR "AC_CONV" "bubble"
          end
+
+    (* move_subt : term -> term -> (term * thm) option
+      eg if head is ``c``, expr is ``e + c + (b + d) + a``,
+      result is |- e + c + (b + d) + a = c + (e + (b + d) + a))
+      ie, if head is a proper subterm of expr,
+      then moves head to left, result is SOME (expr = head + ...)
+      if head not proper subterm of expr returns NONE
+      first component of result is the ...  *)
+
+    fun move_subt head expr =
+       let open Psyntax ;
+          val (l, r) = dest_binop opr Bind expr ;
+       in
+          if term_eq l head then SOME (r, REFL expr)
+          else if term_eq r head
+             then SOME (l, INST [x |-> l, y |-> r] comm)
+          else
+            case move_subt head l of SOME (l', th) =>
+                let val th2 = INST [x |-> head, y |-> l', z |-> r] ass ;
+                  val th1 = AP_THM (AP_TERM opr th) r ;
+                  val rest = mk_binop opr (l', r) ;
+                in SOME (rest, TRANS th1 th2) end
+              | NONE =>
+                case move_subt head r of SOME (r', th) =>
+                    let val th2 = INST [x |-> l, y |-> head, z |-> r'] asc ;
+                      val th1 = AP_TERM (mk_comb (opr, l)) th ;
+                      val rest = mk_binop opr (l, r') ;
+                    in SOME (rest, TRANS th1 th2) end
+                  | NONE => NONE
+       end handle Bind => NONE ;
+
    in 
-      (opr, ass, bubble) 
+      {opr = opr, ass = ass, bubble = bubble, move_subt = move_subt}
    end
    handle e => raise (wrap_exn "Conv" "ac_fns" e)
 
 fun AC_CONV (associative, commutative) =
    let
-      val (opr, ass, bubble) = ac_fns (associative, commutative) 
+      val {opr, ass, bubble, ...} = ac_fns (associative, commutative) 
       fun asce {lhs, rhs} =
          if term_eq lhs rhs
             then REFL lhs

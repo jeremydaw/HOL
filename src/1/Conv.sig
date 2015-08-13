@@ -114,4 +114,8 @@ sig
    val PRINT_CONV            : conv
    val MAP_THM               : conv -> thm -> thm
    val PATH_CONV             : string -> conv -> conv
+   val ac_fns	: thm * thm -> {opr : term, ass : thm, 
+     bubble : term -> term -> thm,
+     move_subt : term -> term -> (term * thm) option}
+     
 end
