@@ -2290,7 +2290,7 @@ end
  * [JRH 91.07.17]                                                        *
  *-----------------------------------------------------------------------*)
 
-fun AC_CONV (associative, commutative) =
+fun ac_fns (associative, commutative) =
    let
       val opr = (rator o rator o lhs o snd o strip_forall o concl) commutative
       val ty = (hd o #Args o dest_type o type_of) opr
@@ -2309,6 +2309,10 @@ fun AC_CONV (associative, commutative) =
                                    Rand = yz}})
       val asc = TRANS (SUBS [comm] (SYM ass)) (INST [y |-> x, x |-> y] ass)
 
+      (* bubble : term -> term -> thm
+        eg if head is ``c``, expr is ``a + (b + (c + (d + e)))``
+        then bubble head expr is 
+        |- a + (b + (c + (d + e))) = c + (a + (b + (d + e)))) *)
       fun bubble head expr =
          let
             val {Rator, Rand = r} = dest_comb expr
@@ -2331,7 +2335,14 @@ fun AC_CONV (associative, commutative) =
                          end
             else raise ERR "AC_CONV" "bubble"
          end
+   in 
+      (opr, ass, bubble) 
+   end
+   handle e => raise (wrap_exn "Conv" "ac_fns" e)
 
+fun AC_CONV (associative, commutative) =
+   let
+      val (opr, ass, bubble) = ac_fns (associative, commutative) 
       fun asce {lhs, rhs} =
          if term_eq lhs rhs
             then REFL lhs
