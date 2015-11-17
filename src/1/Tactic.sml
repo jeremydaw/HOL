@@ -816,6 +816,48 @@ in
 end
 val IRULE_TAC = irule
 
+local 
+(* you'd normally want to preprocess a rule before applying prim_irule;
+  this is done by Drule.SPEC_UNDISCH_EXL and by the following conversions *)
+
+(* raise existential quantifier over one conjunction *)
+val reconv = RIGHT_AND_EXISTS_CONV ORELSEC LEFT_AND_EXISTS_CONV ;
+
+(* descends through multiple conjunctions, raising existentials *)
+fun depth_reconv tm = if is_conj tm then
+    (BINOP_CONV (TRY_CONV depth_reconv) THENC reconv) tm
+    else raise UNCHANGED ;
+
+(* tm of the form ``Q /\ R /\ (?x. P x)``,
+  move ?x to top level, then repeat (under that ?x) *)
+fun rpt_reconv tm = TRY_CONV
+  (QCHANGED_CONV depth_reconv THENC RAND_CONV (ABS_CONV rpt_reconv)) tm ;
+
+(* descend through existential binders already at top of term *)
+fun init_ex_rreconv tm =
+  if is_exists tm then RAND_CONV (ABS_CONV init_ex_rreconv) tm
+  else rpt_reconv tm ;
+
+in
+
+fun irule thm (asl, w) =
+  let val sue_thm = SPEC_UNDISCH_EXL (GEN_ALL thm) ;
+    val orig_hyps = hyp thm ; 
+    (* move existentials to outside in new hyps *)
+    fun hyp_is_new h = not (mem h orig_hyps) ;
+    val re_sue_thm = HYP_CONV_RULE hyp_is_new init_ex_rreconv sue_thm ;
+    (* don't substitute hypotheses which were in the original theorem *)
+    val hypfvs = Thm.hyp_frees thm ;
+    val hyptyvars = HOLset.listItems (Thm.hyp_tyvars thm) ;
+    val matchsub = match_terml hyptyvars hypfvs (concl sue_thm) w ;
+    val (subthm, subhyps) = INST_TT_HYPS matchsub sue_thm ;
+    (* don't add subgoals which were hyps in the original theorem *)
+    val hyps_to_add = Lib.set_diff subhyps orig_hyps ;
+  in ADD_SGS_TAC hyps_to_add (ACCEPT_TAC subthm) (asl, w) end ;
+
+end ;
+
+
 (* ----------------------------------------------------------------------*
  * Definition of the standard resolution tactics IMP_RES_TAC and RES_TAC *
  *                                                                       *
