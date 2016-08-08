@@ -34,7 +34,7 @@
     open Rsyntax ParseDatatype;
 *)
 
-structure Datatype :> Datatype =
+structure Datatype (* :> Datatype *) =
 struct
 
 open HolKernel Parse boolLib Prim_rec ParseDatatype DataSize

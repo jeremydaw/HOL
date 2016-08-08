@@ -12,7 +12,7 @@
    app load [(* "HOLSimps", *) "Q", "numLib", "IndDefLib", "tautLib"];
 *)
 
-structure ind_types :> ind_types =
+structure ind_types (* :> ind_types *) =
 struct
 
 open HolKernel Parse boolLib InductiveDefinition

@@ -53,11 +53,11 @@
 
 #include sequences/kernel
 #include sequences/core-theories
-#include sequences/more-theories
-#include sequences/large-theories
+# JED include sequences/more-theories
+# JED include sequences/large-theories
 
 #
 # Examples only from here on
 #
 
-#include sequences/final-examples
+# JED include sequences/final-examples
