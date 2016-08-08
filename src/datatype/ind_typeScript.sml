@@ -177,6 +177,11 @@ val (ZRECSPACE_RULES,ZRECSPACE_INDUCT,ZRECSPACE_CASES) =
    `ZRECSPACE (ZBOT:num->'a->bool) /\
     (!c i r. (!n. ZRECSPACE (r n)) ==> ZRECSPACE (ZCONSTR c i r))`;
 
+val (ZCORECSPACE_rules,ZCORECSPACE_coind,ZCORECSPACE_cases) =
+  CoIndDefLib.Hol_coreln
+   `ZCORECSPACE (ZBOT:num->'a->bool) /\
+    (!c i r. (!n. ZCORECSPACE (r n)) ==> ZCORECSPACE (ZCONSTR c i r))`;
+
 local fun new_basic_type_definition tyname (mkname, destname) thm =
        let val (pred, witness) = dest_comb(concl thm)
            val predty = type_of pred
@@ -194,6 +199,10 @@ in
 val recspace_tydef =
   new_basic_type_definition "recspace"
       ("mk_rec","dest_rec") (CONJUNCT1 ZRECSPACE_RULES)
+
+val corecspace_tydef =
+  new_basic_type_definition "corecspace"
+      ("mk_corec","dest_corec") (CONJUNCT1 ZCORECSPACE_rules)
 end;
 
 (* ------------------------------------------------------------------------- *)
@@ -207,6 +216,15 @@ val BOTTOM = new_definition(
 val CONSTR = new_definition(
   "CONSTR",
   Term`CONSTR c i r : 'a recspace = mk_rec (ZCONSTR c i (\n. dest_rec(r n)))`);
+
+val COBOTTOM = new_definition(
+  "COBOTTOM",
+  Term`COBOTTOM = mk_corec (ZBOT:num->'a->bool)`);
+
+val COCONSTR = new_definition(
+  "COCONSTR",
+  Term`COCONSTR c i r : 'a corecspace =
+    mk_corec (ZCONSTR c i (\n. dest_corec(r n)))`);
 
 (* ------------------------------------------------------------------------- *)
 (* Some lemmas.                                                              *)
@@ -228,6 +246,22 @@ val DEST_REC_INJ = store_thm(
   POP_ASSUM(MP_TAC o Q.AP_TERM `mk_rec:(num->'a->bool)->'a recspace`) THEN
   REWRITE_TAC[fst recspace_tydef]);
 
+val MK_COREC_INJ = store_thm(
+  "MK_COREC_INJ",
+  ``!x y. (mk_corec x :'a corecspace = mk_corec y)
+         ==> (ZCORECSPACE x /\ ZCORECSPACE y ==> (x = y))``,
+  REPEAT GEN_TAC THEN DISCH_TAC THEN
+  REWRITE_TAC[snd corecspace_tydef] THEN
+  DISCH_THEN(fn th => ONCE_REWRITE_TAC[GSYM th]) THEN
+  ASM_REWRITE_TAC[]);
+
+val DEST_COREC_INJ = store_thm(
+  "DEST_COREC_INJ",
+  ``!x y. (dest_corec x = dest_corec y) = (x:'a corecspace = y)``,
+  REPEAT GEN_TAC THEN EQ_TAC THEN DISCH_TAC THEN ASM_REWRITE_TAC[] THEN
+  POP_ASSUM(MP_TAC o Q.AP_TERM `mk_corec:(num->'a->bool)->'a corecspace`) THEN
+  REWRITE_TAC[fst corecspace_tydef]);
+
 (* ------------------------------------------------------------------------- *)
 (* Show that the set is freely inductively generated.                        *)
 (* ------------------------------------------------------------------------- *)
@@ -240,6 +274,15 @@ val CONSTR_BOT = store_thm(
   REWRITE_TAC[ZCONSTR_ZBOT, ZRECSPACE_RULES] THEN
   MATCH_MP_TAC(CONJUNCT2 ZRECSPACE_RULES) THEN
   SIMP_TAC bool_ss [fst recspace_tydef, snd recspace_tydef]);
+
+val COCONSTR_COBOT = store_thm(
+  "COCONSTR_COBOT",
+  ``!c i r. ~(COCONSTR c i r :'a corecspace = COBOTTOM)``,
+  REPEAT GEN_TAC THEN REWRITE_TAC[COCONSTR, COBOTTOM] THEN
+  DISCH_THEN(MP_TAC o MATCH_MP MK_COREC_INJ) THEN
+  REWRITE_TAC[ZCONSTR_ZBOT, ZCORECSPACE_rules] THEN
+  MATCH_MP_TAC(CONJUNCT2 ZCORECSPACE_rules) THEN
+  SIMP_TAC bool_ss [fst corecspace_tydef, snd corecspace_tydef]);
 
 val CONSTR_INJ = store_thm(
   "CONSTR_INJ",
@@ -255,6 +298,22 @@ val CONSTR_INJ = store_thm(
     REWRITE_TAC[INJP_INJ, INJN_INJ, INJF_INJ, INJA_INJ] THEN
     ONCE_REWRITE_TAC[FUN_EQ_THM] THEN BETA_TAC THEN
     REWRITE_TAC[INV_SUC_EQ, DEST_REC_INJ]
+  ]);
+
+val COCONSTR_INJ = store_thm(
+  "COCONSTR_INJ",
+  ``!c1 i1 r1 c2 i2 r2. (COCONSTR c1 i1 r1 :'a corecspace = COCONSTR c2 i2 r2) =
+                        (c1 = c2) /\ (i1 = i2) /\ (r1 = r2)``,
+  REPEAT GEN_TAC THEN EQ_TAC THEN DISCH_TAC THEN ASM_REWRITE_TAC[] THEN
+  POP_ASSUM(MP_TAC o REWRITE_RULE[COCONSTR]) THEN
+  DISCH_THEN(MP_TAC o MATCH_MP MK_COREC_INJ) THEN
+  W(C SUBGOAL_THEN ASSUME_TAC o funpow 2 lhand o snd) THENL [
+    CONJ_TAC THEN MATCH_MP_TAC(CONJUNCT2 ZCORECSPACE_rules) THEN
+    SIMP_TAC bool_ss [fst corecspace_tydef, snd corecspace_tydef],
+    ASM_REWRITE_TAC[] THEN REWRITE_TAC[ZCONSTR] THEN
+    REWRITE_TAC[INJP_INJ, INJN_INJ, INJF_INJ, INJA_INJ] THEN
+    ONCE_REWRITE_TAC[FUN_EQ_THM] THEN BETA_TAC THEN
+    REWRITE_TAC[INV_SUC_EQ, DEST_COREC_INJ]
   ]);
 
 val CONSTR_IND = store_thm(
@@ -283,6 +342,37 @@ val CONSTR_IND = store_thm(
     DISCH_THEN MATCH_MP_TAC THEN
     REWRITE_TAC[fst recspace_tydef, snd recspace_tydef]
   ]);;
+
+(* what is the coinductin theorem to be ???
+val COCONSTR_IND = store_thm(
+  "COCONSTR_IND",
+  ``!P. (!x. P x ==> (x = COBOTTOM) \/
+             ?c i r. (x = COCONSTR c i r) /\ !n. P (r n)) ==>
+
+        (!c i r. (!n. P(r n)) ==> P(COCONSTR c i r)) ==>
+        !x:'a corecspace. P(x)``,
+  REPEAT STRIP_TAC THEN
+  MP_TAC(Q.SPEC `\z:num->'a->bool. ZCORECSPACE(z) /\ P(mk_corec z)`
+         ZCORECSPACE_coind) THEN
+  BETA_TAC THEN ASM_REWRITE_TAC[ZCORECSPACE_rules, GSYM BOTTOM] THEN
+  W(C SUBGOAL_THEN ASSUME_TAC o funpow 2 lhand o snd) THENL [
+    REPEAT GEN_TAC THEN SIMP_TAC bool_ss [FORALL_AND_THM] THEN
+    REPEAT STRIP_TAC THENL [
+      MATCH_MP_TAC(CONJUNCT2 ZCORECSPACE_rules) THEN ASM_REWRITE_TAC[],
+      FIRST_ASSUM (fn implhs =>
+        FIRST_ASSUM (fn imp => (MP_TAC (HO_MATCH_MP imp implhs)))) THEN
+      REWRITE_TAC[COCONSTR] THEN
+      RULE_ASSUM_TAC(REWRITE_RULE[snd corecspace_tydef]) THEN
+      ASM_SIMP_TAC (bool_ss ++ ETA_ss) []
+    ],
+    ASM_REWRITE_TAC[] THEN
+    DISCH_THEN(MP_TAC o Q.SPEC `dest_corec (x:'a corecspace)`) THEN
+    REWRITE_TAC[fst corecspace_tydef] THEN
+    REWRITE_TAC[tautLib.TAUT_PROVE ``(a ==> a /\ b) = (a ==> b)``] THEN
+    DISCH_THEN MATCH_MP_TAC THEN
+    REWRITE_TAC[fst corecspace_tydef, snd corecspace_tydef]
+  ]);;
+*)
 
 (* ------------------------------------------------------------------------- *)
 (* Now prove the recursion theorem (this subcase is all we need).            *)
@@ -399,9 +489,11 @@ val ISO_USAGE = store_thm(
     Remove constants from top-level name-space
    ---------------------------------------------------------------------- *)
 
+(*
 val _ = app (fn s => remove_ovl_mapping s {Name = s, Thy = "ind_type"})
             ["NUMPAIR", "NUMSUM", "INJN", "INJA", "INJF", "INJP",
              "FCONS", "ZCONSTR", "ZBOT", "BOTTOM", "CONSTR", "FNIL", "ISO"]
+*)
 
 local open OpenTheoryMap in
   val ns = ["HOL4","Datatype"]
